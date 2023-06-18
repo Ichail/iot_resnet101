@@ -64,8 +64,8 @@ for epoch in range(num_epochs):
             inputs, labels = data[0].to(device), data[1].to(device)
             outputs = model(inputs)
             _, predicted = torch.max(outputs.data, 1)
-            predictions.extend(predicted.gpu().numpy())
-            true_labels.extend(labels.gpu().numpy())
+            predictions.extend(predicted.cpu().numpy())
+            true_labels.extend(labels.cpu().numpy())
 
     print(classification_report(true_labels, predictions, target_names=classes, zero_division=1))
     with open("report_epoch_" + str(epoch), 'w') as rep:
