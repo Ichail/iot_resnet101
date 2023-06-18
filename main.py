@@ -4,13 +4,14 @@ import torch.optim as optim
 from torchvision import transforms, datasets, models
 from tqdm import tqdm
 from sklearn.metrics import f1_score, recall_score
+from sklearn.metrics import classification_report
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print(device)
 
-classes = ("normal", "mirai", "wiretap", "arp", "ddos")
-train_dir = './data/train'
-test_dir = './data/test'
+classes = ("normal", "mirai", "wiretap", "arp")
+train_dir = '/home/michael/Desktop/kurs/iot_resnet101/data/train'
+test_dir = '/home/michael/Desktop/kurs/iot_resnet101/data/test'
 
 train_transforms = transforms.Compose(
     [transforms.Resize((224, 224)),
@@ -34,12 +35,15 @@ model = models.resnet101(pretrained=True)
 for param in model.parameters():
     param.requires_grad = False
 
-model.fc = nn.Linear(2048, 5)
+num_classes = 4
+num_features = model.fc.in_features
+model.fc = nn.Linear(num_features, num_classes)
 
 criterion = nn.CrossEntropyLoss()
-optimizer = optim.SGD(model.fc.parameters(), lr=0.001, momentum=0.9)
+optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
 
-num_epochs = 3
+num_epochs = 10
+
 model.to(device)
 
 for epoch in range(num_epochs):
@@ -52,7 +56,6 @@ for epoch in range(num_epochs):
         loss.backward()
         optimizer.step()
         running_loss += loss.item()
-        print("Epoch {} - Training loss: {} ".format(epoch, running_loss / len(train_loader)))
 
     predictions = []
     true_labels = []
@@ -65,12 +68,7 @@ for epoch in range(num_epochs):
             predictions.extend(predicted.cpu().numpy())
             true_labels.extend(labels.cpu().numpy())
 
-    recall = recall_score(true_labels, predictions)
-    f1 = f1_score(true_labels, predictions)
+    print(classification_report(true_labels, predictions, target_names=classes, zero_division=1))
 
-    print('Recall:', recall)
-    print('F1:', f1)
-
-
-
-
+    PATH = "./model/" + "model" + str(epoch) + ".pt"
+    torch.save(model.state_dict(), PATH)

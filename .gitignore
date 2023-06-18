@@ -1,1 +1,7 @@
 *.png
+.idea/*
+data/test/
+data/train/
+ddos/
+model/*.pt
+pcap_test/
