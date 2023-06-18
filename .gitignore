@@ -1,5 +1,4 @@
-*.png
-.idea/*
+.idea/
 data/test/
 data/train/
 ddos/
