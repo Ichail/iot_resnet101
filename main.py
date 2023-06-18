@@ -3,15 +3,14 @@ import torch.nn as nn
 import torch.optim as optim
 from torchvision import transforms, datasets, models
 from tqdm import tqdm
-from sklearn.metrics import f1_score, recall_score
 from sklearn.metrics import classification_report
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print(device)
 
 classes = ("normal", "mirai", "wiretap", "arp")
-train_dir = '/home/michael/Desktop/kurs/iot_resnet101/data/train'
-test_dir = '/home/michael/Desktop/kurs/iot_resnet101/data/test'
+train_dir = '/home/michae/Documents/dataset/iot_dataset/data/train'
+test_dir = '/home/michae/Documents/dataset/iot_dataset/data/test'
 
 train_transforms = transforms.Compose(
     [transforms.Resize((224, 224)),
@@ -40,7 +39,7 @@ num_features = model.fc.in_features
 model.fc = nn.Linear(num_features, num_classes)
 
 criterion = nn.CrossEntropyLoss()
-optimizer = optim.SGD(model.parameters(), lr=0.001, momentum=0.9)
+optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
 
 num_epochs = 10
 
@@ -65,10 +64,12 @@ for epoch in range(num_epochs):
             inputs, labels = data[0].to(device), data[1].to(device)
             outputs = model(inputs)
             _, predicted = torch.max(outputs.data, 1)
-            predictions.extend(predicted.cpu().numpy())
-            true_labels.extend(labels.cpu().numpy())
+            predictions.extend(predicted.gpu().numpy())
+            true_labels.extend(labels.gpu().numpy())
 
     print(classification_report(true_labels, predictions, target_names=classes, zero_division=1))
-
-    PATH = "./model/" + "model" + str(epoch) + ".pt"
+    with open("report_epoch_" + str(epoch), 'w') as rep:
+        rep.write(classification_report(true_labels, predictions, target_names=classes, zero_division=1))
+        rep.close()
+    PATH = "./model/" + "model_epoch" + str(epoch) + ".pt"
     torch.save(model.state_dict(), PATH)
