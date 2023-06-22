@@ -1,0 +1,5 @@
+normal
+mirai
+ddos
+arp
+os_scan

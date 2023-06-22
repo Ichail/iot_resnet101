@@ -2,5 +2,6 @@
 data/test/
 data/train/
 ddos/
-model/*.pt
+models/*.pt
+models/*.onnx
 pcap_test/

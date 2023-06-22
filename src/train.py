@@ -8,9 +8,9 @@ from sklearn.metrics import classification_report
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print(device)
 
-classes = ("normal", "mirai", "wiretap", "arp")
-train_dir = '/home/michae/Documents/dataset/iot_dataset/data/train'
-test_dir = '/home/michae/Documents/dataset/iot_dataset/data/test'
+classes = ("normal", "mirai", "ddos", "arp", "os_scan")
+train_dir = 'data/train'
+test_dir = 'data/test'
 
 train_transforms = transforms.Compose(
     [transforms.Resize((224, 224)),
@@ -34,7 +34,7 @@ model = models.resnet101(pretrained=True)
 for param in model.parameters():
     param.requires_grad = False
 
-num_classes = 4
+num_classes = 5
 num_features = model.fc.in_features
 model.fc = nn.Linear(num_features, num_classes)
 
@@ -42,7 +42,6 @@ criterion = nn.CrossEntropyLoss()
 optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
 
 num_epochs = 10
-
 model.to(device)
 
 for epoch in range(num_epochs):
@@ -71,5 +70,6 @@ for epoch in range(num_epochs):
     with open("report_epoch_" + str(epoch), 'w') as rep:
         rep.write(classification_report(true_labels, predictions, target_names=classes, zero_division=1))
         rep.close()
-    PATH = "./model/" + "model_epoch" + str(epoch) + ".pt"
-    torch.save(model.state_dict(), PATH)
+
+    model_scripted = torch.jit.script(model)
+    model_scripted.save('model.pt')
